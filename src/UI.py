@@ -1,4 +1,4 @@
-from tkinter import Tk, Frame, Label, Entry, Button
+from tkinter import Tk, Frame, Label, Entry, Button, DISABLED
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Definimos la interfaz gráfica
@@ -23,14 +23,18 @@ def render_ui(self):
     self.learning_rate = Entry(self.container_before)
     self.learning_rate.grid(row=1, column=1)
 
-    Button(self.container_before, text="Inicializar pesos", command=self.init_weights).grid(row=0, column=2)
-    Button(self.container_before, text="Entrenar", command=self.run).grid(row=1, column=2)
+    self.weight_btn = Button(self.container_before, text="Inicializar pesos", command=self.init_weights, state=DISABLED)
+    self.run_btn = Button(self.container_before, text="Entrenar", command=self.run, state=DISABLED)
 
     self.container_before.grid(row=2, columnspan=4)
 
     self.container_after = Frame(self.window)
     self.analyse = Button(self.container_after, text="Evaluar", command=self.evaluate).grid(row=0, column=0)
+    self.is_converge = Label(self.container_after, text="", font=("Arial", 15))
 
+
+    self.weight_btn.grid(row=0, column=2)
+    self.run_btn.grid(row=1, column=2)
     # escucha los eventos del mouse sobre el gráfico
     self.fig.canvas.mpl_connect('button_press_event', self.set_point)
 

@@ -1,5 +1,5 @@
-from asyncio.windows_events import NULL
 import matplotlib.pyplot as plt
+from tkinter import NORMAL
 from src.UI import render_ui
 import numpy as np
 
@@ -22,7 +22,7 @@ class Perceptron:
         self.sigma = 0
 
         # Parámetros para el algoritmos
-        self.gens = 100 # epocas o generaciones máximas
+        self.gens = 0 # epocas o generaciones máximas
         self.W = [] # pesos
         self.lr = 0.1 # tasa de aprendizaje
 
@@ -53,6 +53,10 @@ class Perceptron:
             else:
                 self.test_data = np.append(self.test_data, [[event.xdata, event.ydata]], axis=0)
             self.plot_point((event.xdata, event.ydata))
+        
+        if (len(np.unique(self.Y)) > 1):
+            self.weight_btn["state"] = NORMAL
+
         self.fig.canvas.draw()
 
     def plot_point(self, point: tuple, cluster=None):
@@ -81,27 +85,36 @@ class Perceptron:
         self.is_training = False
         self.container_before.grid_remove()
         self.container_after.grid(row=2, columnspan=4)
-        self.lr = self.learning_rate.get()
-        self.gens = self.max_iter.get()
+        try:
+            self.lr = float(self.learning_rate.get())
+        except:
+            self.lr = 0.3
+        try:
+            self.gens = int(self.max_iter.get())
+        except:
+            self.gens = 100
         self.train()
 
     def init_weights(self):
-        print("Inicializando pesos...")
         # Sacamos el random para los pesos
         self.W = np.random.uniform(-1, 1, self.X.shape[1] + 1)
-        # Agregamos el bias al final del array de pesos (W = n + 1)
-        # self.W = np.append(self.W, np.random.uniform(-1, 1))
-        print(f"W: {self.W}")
+        self.run_btn["state"] = NORMAL
+        self.x1Line = np.linspace(-5, 5, 100)
+        self.x2Line = (-self.W[0] * self.x1Line - self.W[-1]) / self.W[1]
+        plt.plot(self.x1Line, self.x2Line, color='r')
+        self.fig.canvas.draw()
+
 
     def evaluate(self):
         """Toma los datos de prueba y los categoriza"""
         self.clear_plot()
         # Se vuelven a imprimir los datos de entrenamiento
         self.plot_training_data()
+        self.x2Line = (-self.W[0] * self.x1Line - self.W[-1]) / self.W[1]
+        plt.plot(self.x1Line, self.x2Line, color='b')
         for i in self.test_data:
             res = np.dot(self.W[: -1], i) + self.W[-1]
             cluster = 1 if res > 0 else 0
-            print(cluster)            
             self.plot_point(i, cluster)
         self.fig.canvas.draw()
         # llamar al algoritmo de entrenamiento
@@ -112,17 +125,7 @@ class Perceptron:
         pw = 0
         v = 0
         done = False
-        a = 0.03
-
-        x1Line = np.linspace(-5, 5, 100)
-        x2Line = (-self.W[0] * x1Line - self.W[-1]) / self.W[1]
-        plt.plot(x1Line, x2Line, color='r')
-        self.fig.canvas.draw()
-
-        # Normalización
-        # self.mu = np.mean(self.X, axis=0)
-        # self.sigma = np.std(self.X, axis=0)
-        # error = np.sum((np.abs(self.Y - y)))
+        iter = 0
 
         while(not done):
             done = True
@@ -132,14 +135,21 @@ class Perceptron:
                 error = self.Y[i] - pw
                 if error != 0:
                     done = False
-                    self.W[:-1] = self.W[:-1] + np.multiply((a * error), self.X[i, :])
-                    self.W[-1] = self.W[-1] + a * error
-                    print(self.W)
-                    print(self.X[i, :])
-            x2Line = (-self.W[0] * x1Line - self.W[-1]) / self.W[1]
-            plt.plot(x1Line, x2Line, color='g')
-            self.fig.canvas.draw()
-        print("Valor de W: ", self.W)
+                    self.W[:-1] = self.W[:-1] + np.multiply((self.lr * error), self.X[i, :])
+                    self.W[-1] = self.W[-1] + self.lr * error
+                self.x2Line = (-self.W[0] * self.x1Line - self.W[-1]) / self.W[1]
+                plt.plot(self.x1Line, self.x2Line, color='g')
+                self.fig.canvas.draw()
+            iter += 1
+            if (iter == self.gens):
+                self.is_converge['text'] = "Límite de iteraciones alcanzada"
+                done = True
+        
+        if (iter != self.gens):
+            self.is_converge['text'] = "El set de datos converge"
+        self.is_converge.grid(row=1, column=0)
+        plt.plot(self.x1Line, self.x2Line, color='b')
+        self.fig.canvas.draw()
     
     def norm(self, arr):
         """Función para normalizar"""
