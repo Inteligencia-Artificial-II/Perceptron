@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from tkinter import NORMAL, DISABLED
+from tkinter import NORMAL, DISABLED, messagebox
 from src.UI import render_gui
 import numpy as np
 
@@ -87,19 +87,31 @@ class Perceptron:
 
     def run(self):
         """es ejecutada cuando el botón de «entrenar» es presionado"""
-        self.is_training = False
-        self.container_before.grid_remove()
-        self.container_after.grid(row=2, columnspan=4)
-
         # obtenemos los datos de la interfaz gráfica
         try:
             self.lr = float(self.learning_rate.get())
         except:
-            self.lr = 0.3
+            if (self.learning_rate.get() == ""):
+                self.lr = 0.3
+            else:
+                messagebox.showwarning("Error", "Asegurese de ingresar datos númericos validos")
+                self.max_iter.delete(0, 'end')
+                self.learning_rate.delete(0, 'end')
+                return
         try:
             self.epochs = int(self.max_iter.get())
         except:
-            self.epochs = 50
+            if (self.max_iter.get() == ""):
+                self.epochs = 50
+            else:
+                messagebox.showwarning("Error", "Asegurese de ingresar datos númericos validos")
+                self.max_iter.delete(0, 'end')
+                self.learning_rate.delete(0, 'end')
+                return
+        
+        self.is_training = False
+        self.container_before.grid_remove()
+        self.container_after.grid(row=2, columnspan=4)
 
         # mandamos a entrenar al algoritmo
         self.train()
