@@ -1,8 +1,8 @@
 from tkinter import Tk, Frame, Label, Entry, Button, DISABLED
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-# Definimos la interfaz gráfica
-def render_ui(self):
+# Definimos la interfaz gráfica de usuario
+def render_gui(self):
     self.window = Tk()
     self.window.title('Perceptrón')
     self.window.geometry("600x600")
@@ -17,11 +17,9 @@ def render_ui(self):
 
     Label(self.container_before, text="Epocas máximas:").grid(row=0, column=0)
     self.max_iter = Entry(self.container_before)
-    self.max_iter.grid(row=0, column=1)
 
     Label(self.container_before, text="Tasa de aprendizaje:").grid(row=1, column=0)
     self.learning_rate = Entry(self.container_before)
-    self.learning_rate.grid(row=1, column=1)
 
     self.weight_btn = Button(self.container_before, text="Inicializar pesos", command=self.init_weights, state=DISABLED)
     self.run_btn = Button(self.container_before, text="Entrenar", command=self.run, state=DISABLED)
@@ -29,12 +27,17 @@ def render_ui(self):
     self.container_before.grid(row=2, columnspan=4)
 
     self.container_after = Frame(self.window)
-    self.analyse = Button(self.container_after, text="Evaluar", command=self.evaluate).grid(row=0, column=0)
+    self.analyse = Button(self.container_after, text="Evaluar", command=self.evaluate, state=DISABLED)
+    self.restart_btn = Button(self.container_after, text="Reiniciar", command=self.restart)
     self.is_converge = Label(self.container_after, text="", font=("Arial", 15))
 
-
+    self.max_iter.grid(row=0, column=1)
+    self.learning_rate.grid(row=1, column=1)
     self.weight_btn.grid(row=0, column=2)
     self.run_btn.grid(row=1, column=2)
+    self.analyse.grid(row=0, column=0)
+    self.restart_btn.grid(row=0, column=1)
+    self.is_converge.grid(row=1, columnspan=3)
     # escucha los eventos del mouse sobre el gráfico
     self.fig.canvas.mpl_connect('button_press_event', self.set_point)
 
