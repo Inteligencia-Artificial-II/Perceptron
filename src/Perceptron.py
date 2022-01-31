@@ -88,9 +88,9 @@ class Perceptron:
     def init_weights(self):
         print("Inicializando pesos...")
         # Sacamos el random para los pesos
-        self.W = np.random.uniform(0.5, 0.8, self.X.shape[1])
+        self.W = np.random.uniform(-1, 1, self.X.shape[1] + 1)
         # Agregamos el bias al final del array de pesos (W = n + 1)
-        self.W = np.append(self.W, np.random.uniform(-1, 1))
+        # self.W = np.append(self.W, np.random.uniform(-1, 1))
         print(f"W: {self.W}")
 
     def evaluate(self):
@@ -109,44 +109,37 @@ class Perceptron:
     def train(self):
         """Entrena el perceptrón"""
         m, _ = self.X.shape
-        y = np.zeros((m))
-        v = np.empty((m))
-        conv = []
+        pw = 0
+        v = 0
+        done = False
+        a = 0.03
+
         x1Line = np.linspace(-5, 5, 100)
         x2Line = (-self.W[0] * x1Line - self.W[-1]) / self.W[1]
         plt.plot(x1Line, x2Line, color='r')
         self.fig.canvas.draw()
 
         # Normalización
-        self.mu = np.mean(self.X, axis=0)
-        self.sigma = np.std(self.X, axis=0)
-        a = 0.03
-        it = 0
-        error = np.sum((np.abs(self.Y - y)))
+        # self.mu = np.mean(self.X, axis=0)
+        # self.sigma = np.std(self.X, axis=0)
+        # error = np.sum((np.abs(self.Y - y)))
 
-        # print("W: ", self.W)
-        # print("X: ", self.X)
-        # print("Y: ", self.Y)
-        # input()
-
-        while(error != 0 and it < 10000):
+        while(not done):
+            done = True
             for i in range(m):
-                v[i] = np.dot(self.W[: -1], self.X[i, :]) + self.W[-1]
-                y[i] = 1 if v[i] > 0 else 0
-                print("y[i]: ", y[i])
-                print("Y: ", self.Y[i])
-                print("error: ", error)
-                error = np.sum(np.abs(self.Y - y))
-                conv.append(error)
-                it += 1
-                if (self.Y[i] - y[i]) != 0:
-                    self.W[:-1] = self.W[:-1] + a * self.X[i, :]
-                    self.W[-1] = self.W[-1] + a
-                    # break
+                v = np.dot(self.W[: -1], self.X[i, :]) + self.W[-1]
+                pw = 1 if v > 0 else 0
+                error = self.Y[i] - pw
+                if error != 0:
+                    done = False
+                    self.W[:-1] = self.W[:-1] + np.multiply((a * error), self.X[i, :])
+                    self.W[-1] = self.W[-1] + a * error
+                    print(self.W)
+                    print(self.X[i, :])
+            x2Line = (-self.W[0] * x1Line - self.W[-1]) / self.W[1]
+            plt.plot(x1Line, x2Line, color='g')
+            self.fig.canvas.draw()
         print("Valor de W: ", self.W)
-        x2Line = (-self.W[0] * x1Line - self.W[-1]) / self.W[1]
-        plt.plot(x1Line, x2Line, color='g')
-        self.fig.canvas.draw()
     
     def norm(self, arr):
         """Función para normalizar"""
