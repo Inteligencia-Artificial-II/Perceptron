@@ -32,20 +32,20 @@ class Perceptron:
     def set_point(self, event):
         right_click = 1
         # el cluster guarda tanto la clase como el simbolo que graficará 
-        cluster, _ = (('o', 0), 'b') if (event.button == right_click) else (('x', 1), 'r')
+        cluster = 1 if (event.button == right_click) else 0
 
         # evitamos puntos que se encuentren fuera del plano
         if (event.xdata == None or event.ydata == None): return
 
         # guardamos una tupla con los valore X y Y, así como su clase correspondiente
         if (self.is_training):
-            self.Y = np.append(self.Y, cluster[1])
+            self.Y = np.append(self.Y, cluster)
             # Solución temporal
             if (len(self.X) == 0):
                 self.X = np.array([[event.xdata, event.ydata]])
             else:
                 self.X = np.append(self.X, [[event.xdata, event.ydata]], axis=0)
-            self.plot_point((event.xdata, event.ydata), cluster[1])
+            self.plot_point((event.xdata, event.ydata), cluster)
         else:
             # Solución temporal
             if (len(self.test_data) == 0):
@@ -61,8 +61,8 @@ class Perceptron:
         if (cluster == None):
             plt.plot(point[0], point[1], 'o', color='k')
         else:
-            color = 'b' if cluster == 0 else 'r'
-            shape = 'o' if cluster == 0 else 'x'
+            color = 'b' if cluster == 1 else 'r'
+            shape = 'o' if cluster == 1 else 'x'
             plt.plot(point[0], point[1], shape, color=color)
     
     def plot_training_data(self):
@@ -73,8 +73,8 @@ class Perceptron:
     def clear_plot(self):
         """Borra los puntos del canvas"""
         plt.cla()
-        # self.ax.set_xlim([-5, 5])
-        # self.ax.set_ylim([-5, 5])
+        self.ax.set_xlim([-5, 5])
+        self.ax.set_ylim([-5, 5])
         self.fig.canvas.draw()
 
     def run(self):
@@ -98,16 +98,12 @@ class Perceptron:
         self.clear_plot()
         # Se vuelven a imprimir los datos de entrenamiento
         self.plot_training_data()
-            
         for i in self.test_data:
-            print(f"i: {i}")
-            norm = self.norm(np.array([i]))
-            res = np.dot(self.W[: -1], norm + self.W[-1])
+            res = np.dot(self.W[: -1], i) + self.W[-1]
             cluster = 1 if res > 0 else 0
+            print(cluster)            
             self.plot_point(i, cluster)
-            
         self.fig.canvas.draw()
-        print("Test data: ", self.test_data)
         # llamar al algoritmo de entrenamiento
 
     def train(self):
@@ -116,29 +112,41 @@ class Perceptron:
         y = np.zeros((m))
         v = np.empty((m))
         conv = []
+        x1Line = np.linspace(-5, 5, 100)
+        x2Line = (-self.W[0] * x1Line - self.W[-1]) / self.W[1]
+        plt.plot(x1Line, x2Line, color='r')
+        self.fig.canvas.draw()
 
         # Normalización
         self.mu = np.mean(self.X, axis=0)
         self.sigma = np.std(self.X, axis=0)
-        self.X = np.transpose(self.norm(self.X))
         a = 0.03
         it = 0
         error = np.sum((np.abs(self.Y - y)))
 
-        print(f"pruebas: {self.W[-1]}, {self.W[: -1]}")
-        print(f"pruebas: {self.W[-1].shape}, {self.W[: -1].shape}")
+        # print("W: ", self.W)
+        # print("X: ", self.X)
+        # print("Y: ", self.Y)
+        # input()
 
-        while(error != 0):
+        while(error != 0 and it < 10000):
             for i in range(m):
-                v[i] = np.dot(self.W[: -1], self.X[i]) + self.W[-1]
+                v[i] = np.dot(self.W[: -1], self.X[i, :]) + self.W[-1]
                 y[i] = 1 if v[i] > 0 else 0
-                if (self.Y[i] - y[i]) != 0:
-                    self.W[:-1] = self.W[:-1] + a * self.X[i]
-                    self.W[-1] = self.W[-1] + a
+                print("y[i]: ", y[i])
+                print("Y: ", self.Y[i])
+                print("error: ", error)
                 error = np.sum(np.abs(self.Y - y))
                 conv.append(error)
                 it += 1
+                if (self.Y[i] - y[i]) != 0:
+                    self.W[:-1] = self.W[:-1] + a * self.X[i, :]
+                    self.W[-1] = self.W[-1] + a
+                    # break
         print("Valor de W: ", self.W)
+        x2Line = (-self.W[0] * x1Line - self.W[-1]) / self.W[1]
+        plt.plot(x1Line, x2Line, color='g')
+        self.fig.canvas.draw()
     
     def norm(self, arr):
         """Función para normalizar"""
