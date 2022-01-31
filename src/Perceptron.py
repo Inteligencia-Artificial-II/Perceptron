@@ -17,6 +17,9 @@ class Perceptron:
         self.test_data = []
         # bandera para evaluar datos despues del entrenamiento
         self.is_training = True
+        # Datos para normalizar
+        self.mu = 0
+        self.sigma = 0
 
         # Parámetros para el algoritmos
         self.gens = 100 # epocas o generaciones máximas
@@ -29,14 +32,12 @@ class Perceptron:
     def set_point(self, event):
         right_click = 1
         # el cluster guarda tanto la clase como el simbolo que graficará 
-        cluster, color = (('o', 0), 'b') if (event.button == right_click) else (('x', 1), 'r')
+        cluster, _ = (('o', 0), 'b') if (event.button == right_click) else (('x', 1), 'r')
 
         # evitamos puntos que se encuentren fuera del plano
         if (event.xdata == None or event.ydata == None): return
 
         # guardamos una tupla con los valore X y Y, así como su clase correspondiente
-        print(f"points: {self.X}")
-        print(f"clusters: {self.Y}")
         if (self.is_training):
             self.Y = np.append(self.Y, cluster[1])
             # Solución temporal
@@ -44,17 +45,36 @@ class Perceptron:
                 self.X = np.array([[event.xdata, event.ydata]])
             else:
                 self.X = np.append(self.X, [[event.xdata, event.ydata]], axis=0)
-            plt.plot(event.xdata, event.ydata, cluster[0], color=color)
+            self.plot_point((event.xdata, event.ydata), cluster[1])
         else:
             # Solución temporal
             if (len(self.test_data) == 0):
                 self.test_data = np.array([[event.xdata, event.ydata]])
             else:
                 self.test_data = np.append(self.test_data, [[event.xdata, event.ydata]], axis=0)
-            plt.plot(event.xdata, event.ydata, 'o', color='k')
-        # print(f"points: {self.X}")
-        # print(f"clusters: {self.Y}")
-        # print(f"test data: {self.test_data}")
+            self.plot_point((event.xdata, event.ydata))
+        self.fig.canvas.draw()
+
+    def plot_point(self, point: tuple, cluster=None):
+        """Toma un array de tuplas y las añade los puntos en la figura con el
+        color de su cluster"""
+        if (cluster == None):
+            plt.plot(point[0], point[1], 'o', color='k')
+        else:
+            color = 'b' if cluster == 0 else 'r'
+            shape = 'o' if cluster == 0 else 'x'
+            plt.plot(point[0], point[1], shape, color=color)
+    
+    def plot_training_data(self):
+        """Grafica los datos de entrenamiento"""
+        for i in range(len(self.Y)):
+            self.plot_point(self.X[i], self.Y[i])
+
+    def clear_plot(self):
+        """Borra los puntos del canvas"""
+        plt.cla()
+        # self.ax.set_xlim([-5, 5])
+        # self.ax.set_ylim([-5, 5])
         self.fig.canvas.draw()
 
     def run(self):
@@ -65,8 +85,6 @@ class Perceptron:
         self.gens = self.max_iter.get()
         self.train()
 
-        # llamar al algoritmo de entrenamiento
-
     def init_weights(self):
         print("Inicializando pesos...")
         # Sacamos el random para los pesos
@@ -74,24 +92,35 @@ class Perceptron:
         # Agregamos el bias al final del array de pesos (W = n + 1)
         self.W = np.append(self.W, np.random.uniform(-1, 1))
         print(f"W: {self.W}")
-    
+
     def evaluate(self):
+        """Toma los datos de prueba y los categoriza"""
+        self.clear_plot()
+        # Se vuelven a imprimir los datos de entrenamiento
+        self.plot_training_data()
+            
+        for i in self.test_data:
+            print(f"i: {i}")
+            norm = self.norm(np.array([i]))
+            res = np.dot(self.W[: -1], norm + self.W[-1])
+            cluster = 1 if res > 0 else 0
+            self.plot_point(i, cluster)
+            
+        self.fig.canvas.draw()
         print("Test data: ", self.test_data)
         # llamar al algoritmo de entrenamiento
 
     def train(self):
-        m, n = self.X.shape
+        """Entrena el perceptrón"""
+        m, _ = self.X.shape
         y = np.zeros((m))
         v = np.empty((m))
         conv = []
 
         # Normalización
-        mu = np.mean(self.X, axis=0)
-        sigma = np.std(self.X, axis=0)
-        xNorm = []
-        for i in range(n):
-            xNorm.append((self.X[:,i] - mu[i])/sigma[i])
-        self.X = np.transpose(np.array(xNorm))
+        self.mu = np.mean(self.X, axis=0)
+        self.sigma = np.std(self.X, axis=0)
+        self.X = np.transpose(self.norm(self.X))
         a = 0.03
         it = 0
         error = np.sum((np.abs(self.Y - y)))
@@ -102,15 +131,18 @@ class Perceptron:
         while(error != 0):
             for i in range(m):
                 v[i] = np.dot(self.W[: -1], self.X[i]) + self.W[-1]
-                if v[i] > 0:
-                    y[i] = 1
-                else:
-                    y[i] = 0
+                y[i] = 1 if v[i] > 0 else 0
                 if (self.Y[i] - y[i]) != 0:
                     self.W[:-1] = self.W[:-1] + a * self.X[i]
                     self.W[-1] = self.W[-1] + a
                 error = np.sum(np.abs(self.Y - y))
                 conv.append(error)
                 it += 1
-        
         print("Valor de W: ", self.W)
+    
+    def norm(self, arr):
+        """Función para normalizar"""
+        xNorm = []
+        for i in range(arr.shape[1]):
+            xNorm.append((arr[:, i] - self.mu[i]) / self.sigma[i])
+        return np.array(xNorm)
