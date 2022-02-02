@@ -1,12 +1,20 @@
-from tkinter import Tk, Frame, Label, Entry, Button, DISABLED
+from tkinter import Tk, Frame, Label, Entry, Button, DISABLED, Toplevel
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-# Definimos la interfaz gráfica de usuario
+def render_conv(self):
+    """Definimos la ventana donde se imprime la gráfica de convergencia"""
+    # Crea una nueva ventana hija de self.window
+    self.conv_window = Toplevel(self.window)
+    self.conv_window.title('Error acumulado por época')
+    self.conv_window.geometry("700x700")
+    Label(self.conv_window, text='Error acumulado por época', font=('Arial', 20)).grid(row=0, columnspan=4)
+    FigureCanvasTkAgg(self.conv_fig, self.conv_window).get_tk_widget().grid(row=1, columnspan=4)
+
 def render_gui(self):
+    """Definimos la interfaz gráfica de usuario"""
     self.window = Tk()
     self.window.title('Perceptrón')
-    self.window.geometry("600x600")
-
+    self.window.geometry("700x700")
 
     Label(self.window, text="Perceptrón", font=("Arial", 20)).grid(row=0, columnspan=4)
     # añade el gráfico de matplotlib a la interfaz de tkinter
