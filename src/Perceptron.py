@@ -148,6 +148,8 @@ class Perceptron:
 
         # gráficamos la recta inicial que separará los datos
         self.x1Line = np.linspace(-5, 5, 100)
+        self.clear_plot()
+        self.plot_training_data()
         self.plot_line('r')
 
 
