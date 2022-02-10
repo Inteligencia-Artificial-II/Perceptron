@@ -5,6 +5,8 @@ import numpy as np
 
 class Perceptron:
     def __init__(self):
+        self.ax_max = 5
+        self.ax_min = -5
         self.conv_fig = plt.figure(2)
         self.conv_ax = self.conv_fig.add_subplot(111)
         plt.xlabel('Número de épocas')
@@ -13,8 +15,8 @@ class Perceptron:
         self.fig = plt.figure(1)
         self.ax = self.fig.add_subplot(111)
         # establecemos los limites de la gráfica
-        self.ax.set_xlim([-5, 5])
-        self.ax.set_ylim([-5, 5])
+        self.ax.set_xlim([self.ax_min, self.ax_max])
+        self.ax.set_ylim([self.ax_min, self.ax_max])
 
         self.Y = [] # guarda los clusters
         self.X = [] # guarda los puntos de entrenamiento
@@ -158,6 +160,7 @@ class Perceptron:
         # Se posicionan los datos que se graficarán
         self.clear_plot()
         self.plot_training_data()
+        self.plot_area_color()
         self.plot_line('b')
 
         # obtenemos las clases correctas del set de datos de prueba
@@ -189,6 +192,8 @@ class Perceptron:
                     self.W[:-1] = self.W[:-1] + np.multiply((self.lr * error), self.X[i, :])
                     self.W[-1] = self.W[-1] + self.lr * error
                     # gráficamos la recta que separa los datos
+                    self.clear_plot()
+                    self.plot_training_data()
                     self.plot_line('g')
             self.acum_error.append(np.sum(np.abs(self.Y - y)))
             self.iter += 1
@@ -212,6 +217,19 @@ class Perceptron:
         plt.plot(self.x1Line, self.x2Line, color=color)
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+    
+    def plot_area_color(self):
+        if self.X[1, 0] < self.x2Line[np.where(self.x1Line == self.X[0, 0])]:
+            colorA = 'b' if self.Y[0] == 1 else 'r'
+            colorB = 'r' if self.Y[0] == 1 else 'b'
+        else:
+            colorB = 'b' if self.Y[0] == 1 else 'r'
+            colorA = 'r' if self.Y[0] == 1 else 'b'
+        plt.fill_between(self.x1Line, self.x2Line, self.ax_max,
+                         facecolor=colorA, alpha=0.3)
+        plt.fill_between(self.x1Line, self.ax_min, self.x2Line,
+                         facecolor=colorB, alpha=0.3)
+        self.fig.canvas.draw()
 
     def restart(self):
         """devuelve los valores y elementos gráficos a su estado inicial"""
