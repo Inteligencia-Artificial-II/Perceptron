@@ -189,6 +189,10 @@ class Perceptron:
                     self.W[:-1] = self.W[:-1] + np.multiply((self.lr * error), self.X[i, :])
                     self.W[-1] = self.W[-1] + self.lr * error
                     # gráficamos la recta que separa los datos
+                    self.x2Line = np.linspace(-5, 5, 100)
+                    #se limpia y se grafica de nuevo a cada actualizacion
+                    self.clear_plot()
+                    self.plot_training_data()
                     self.plot_line('g')
             self.acum_error.append(np.sum(np.abs(self.Y - y)))
             self.iter += 1
