@@ -219,16 +219,31 @@ class Perceptron:
         self.fig.canvas.flush_events()
     
     def plot_area_color(self):
-        if self.X[1, 0] < self.x2Line[np.where(self.x1Line == self.X[0, 0])]:
-            colorA = 'b' if self.Y[0] == 1 else 'r'
-            colorB = 'r' if self.Y[0] == 1 else 'b'
+        threshold_on_x2 = (-self.W[0] * self.X[0, 0] - self.W[-1]) / self.W[1]
+        # Si el punto seleccionado está por debajo del umbral
+        if self.X[0, 1] < threshold_on_x2:
+            if self.Y[0] == 1:
+                plt.fill_between(self.x1Line, self.x2Line, self.ax_max,
+                                 facecolor='r', alpha=0.3)
+                plt.fill_between(self.x1Line, self.ax_min, self.x2Line,
+                                facecolor='b', alpha=0.3)
+            else:
+                plt.fill_between(self.x1Line, self.x2Line, self.ax_max,
+                                 facecolor='b', alpha=0.3)
+                plt.fill_between(self.x1Line, self.ax_min, self.x2Line,
+                                facecolor='r', alpha=0.3)
+        # Si el punto seleccionado está por arriba del umbral
         else:
-            colorB = 'b' if self.Y[0] == 1 else 'r'
-            colorA = 'r' if self.Y[0] == 1 else 'b'
-        plt.fill_between(self.x1Line, self.x2Line, self.ax_max,
-                         facecolor=colorA, alpha=0.3)
-        plt.fill_between(self.x1Line, self.ax_min, self.x2Line,
-                         facecolor=colorB, alpha=0.3)
+            if self.Y[0] == 1:
+                plt.fill_between(self.x1Line, self.x2Line, self.ax_max,
+                                 facecolor='b', alpha=0.3)
+                plt.fill_between(self.x1Line, self.ax_min, self.x2Line,
+                                 facecolor='r', alpha=0.3)
+            else:
+                plt.fill_between(self.x1Line, self.x2Line, self.ax_max,
+                                 facecolor='r', alpha=0.3)
+                plt.fill_between(self.x1Line, self.ax_min, self.x2Line,
+                                 facecolor='b', alpha=0.3)
         self.fig.canvas.draw()
 
     def restart(self):
